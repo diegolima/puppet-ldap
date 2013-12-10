@@ -10,7 +10,7 @@ class ldap::nss(
 
   $package_name    = $::osfamily ? {
     'Debian' => 'libnss-ldap',
-    'RedHat' => 'nslcd',
+    'RedHat' => 'nss-pam-ldapd',
   }
   $rootbinddn      = "cn=admin,${base}"
   $nss_base_passwd = "${base_passwd},${base}?sub"
@@ -45,8 +45,12 @@ class ldap::nss(
   }
   elsif $osfamily == 'RedHat' {
     file { '/etc/nslcd.conf':
-      content => template('ldap/nslcd.conf.erb')
+      content => template('ldap/nslcd.conf.erb'),
       require => Package[$package_name],
+    }
+
+    service { 'nslcd':
+      ensure => running,
     }
   }
 

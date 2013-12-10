@@ -34,12 +34,19 @@ class ldap::pam(
     content => template('ldap/pam_ldap.conf.erb')
   }
 
+  if $osfamily == 'RedHat' {
+    exec { '/usr/sbin/authconfig --enableldap --enableldapauth --updateall':
+      unless => '/bin/grep pam_ldap /etc/pam.d/password-auth',
+    }
+  }
+
   exec { 'pam_ldap.secret':
     command  => '/bin/cp /root/.passwd/ldap/admin /etc/pam_ldap.secret && chmod 600 /etc/pam_ldap.secret',
     creates  => '/etc/pam_ldap.secret',
     provider => 'shell',
     path     => ['/bin', '/sbin', '/usr/bin'],
     require  => Package[$package_name],
+    onlyif   => 'test -e /root/.passwd/ldap/admin',
   }
 
 
