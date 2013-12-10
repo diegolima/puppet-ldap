@@ -8,7 +8,10 @@ class ldap::nss(
   $base_group   = 'ou=groups',
 ) {
 
-  $package_name    = 'libnss-ldap'
+  $package_name    = $::osfamily ? {
+    'Debian' => 'libnss-ldap',
+    'RedHat' => 'nslcd',
+  }
   $rootbinddn      = "cn=admin,${base}"
   $nss_base_passwd = "${base_passwd},${base}?sub"
   $nss_base_shadow = "${base_shadow},${base}?sub"
@@ -27,16 +30,24 @@ class ldap::nss(
   }
 
 
-  file { '/etc/libnss-ldap.conf':
-    content => template('ldap/libnss-ldap.conf.erb')
+  if $osfamily == 'Debian' {
+    file { '/etc/libnss-ldap.conf':
+      content => template('ldap/libnss-ldap.conf.erb')
+    }
+  
+    exec { 'libnss-ldap.secret':
+      command  => '/bin/cp /root/.passwd/ldap/admin /etc/libnss-ldap.secret && chmod 600 /etc/libnss-ldap.secret',
+      creates  => '/etc/libnss-ldap.secret',
+      provider => 'shell',
+      path     => ['/bin', '/sbin', '/usr/bin'],
+      require  => Package[$package_name],
+    }
   }
-
-  exec { 'libnss-ldap.secret':
-    command  => '/bin/cp /root/.passwd/ldap/admin /etc/libnss-ldap.secret && chmod 600 /etc/libnss-ldap.secret',
-    creates  => '/etc/libnss-ldap.secret',
-    provider => 'shell',
-    path     => ['/bin', '/sbin', '/usr/bin'],
-    require  => Package[$package_name],
+  elsif $osfamily == 'RedHat' {
+    file { '/etc/nslcd.conf':
+      content => template('ldap/nslcd.conf.erb')
+      require => Package[$package_name],
+    }
   }
 
   exec { 'update-nsswitch':

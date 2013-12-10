@@ -8,7 +8,10 @@ class ldap::pam(
   $base_group   = 'ou=groups',
 ) {
 
-  $package_name    = 'libpam-ldap'
+  $package_name    = $::osfamily ? {
+    'Debian' => 'libpam-ldap',
+    'RedHat' => 'pam_ldap',
+  }
   $rootbinddn      = "cn=admin,${base}"
   $nss_base_passwd = "${base_passwd},${base}?one"
   $nss_base_shadow = "${base_shadow},${base}?one"

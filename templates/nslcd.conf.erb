@@ -1,0 +1,27 @@
+uri <%= @uri =%>
+ldap_version <%= @ldap_version %>
+base <%= @base =%>
+<% if @binddn %>
+binddn <%= @binddn =%>
+bindpw <%= @bindpw =%>
+<% end %>
+<% if @rootbinddn %>
+rootpwmoddn <%= @rootbinddn =%>
+<% end %>
+
+#ssl start_tls
+#tls_reqcert never
+#tls_cacertdir /etc/ssl/certs
+#tls_cacertfile /etc/ssl/ca.cert
+#tls_ciphers TLSv1
+#tls_cert
+#tls_key
+
+uid nslcd
+
+<% if @osfamily == 'RedHat' %>
+gid ldap
+<% elsif @osfamily == 'Debian' %>
+gid openldap
+<% end %>
+ssl no
